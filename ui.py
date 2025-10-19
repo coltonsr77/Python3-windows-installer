@@ -1,6 +1,8 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import threading
+import os
+import subprocess
 from downloader import download_github_repo
 
 class InstallerApp(ctk.CTk):
@@ -40,17 +42,62 @@ class InstallerApp(ctk.CTk):
             messagebox.showerror("Error", "Please provide a GitHub URL and install folder.")
             return
 
-        self.progress_label.configure(text="Downloading...")
+        self.progress_label.configure(text="📦 Downloading repository...")
         thread = threading.Thread(target=self.download_repo_thread, args=(repo, path))
         thread.start()
 
     def download_repo_thread(self, repo, path):
         try:
-            download_github_repo(repo, path)
-            self.progress_label.configure(text="✅ Installation complete!")
+            result = download_github_repo(repo, path)
+
+            if result["status"] == "ready":
+                self.progress_label.configure(text="✅ Installer file found! Preparing to run...")
+                install_path = result["path"]
+
+                # Look for installerready.exe or .bat
+                installer_file = None
+                for root, dirs, files in os.walk(install_path):
+                    for f in files:
+                        if f.lower() in ["installerready.exe", "installerready.bat"]:
+                            installer_file = os.path.join(root, f)
+                            break
+                    if installer_file:
+                        break
+
+                if installer_file:
+                    self.ask_run_installer(installer_file)
+                else:
+                    self.progress_label.configure(
+                        text="⚠️ Installer not found (unexpected). Repo downloaded."
+                    )
+
+            else:
+                self.progress_label.configure(
+                    text="⚠️ Oops! We can’t install this project, but we downloaded the repo."
+                )
+
         except Exception as e:
             self.progress_label.configure(text="❌ Installation failed.")
             messagebox.showerror("Error", str(e))
 
+    def ask_run_installer(self, installer_path):
+        """Ask user to run the installerready file."""
+        answer = messagebox.askyesno(
+            "Run Installer",
+            f"Installer file found:\n\n{installer_path}\n\nDo you want to run it now?"
+        )
+
+        if answer:
+            try:
+                if installer_path.lower().endswith(".exe"):
+                    subprocess.Popen([installer_path], shell=True)
+                elif installer_path.lower().endswith(".bat"):
+                    subprocess.Popen(["cmd", "/c", installer_path], shell=True)
+                self.progress_label.configure(text="🚀 Installer launched successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to launch installer:\n{e}")
+        else:
+            self.progress_label.configure(text="Installer ready, but not launched.")
+
     def show_about(self):
-        messagebox.showinfo("About", "GitHub Installer v1.0\nCreated by coltonsr77")
+        messagebox.showinfo("About", "GitHub Installer v0.1\nCreated by coltonsr77")
