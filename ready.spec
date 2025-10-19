@@ -2,16 +2,18 @@
 block_cipher = None
 
 a = Analysis(
-    ['ui.py'],
+    ['ui.py'],          # main script
     pathex=[],
     binaries=[],
-    datas=[('downloader.py', '.')]
+    datas=[('downloader.py', '.'),
     hiddenimports=[
         'customtkinter', 'requests', 'tkinter', 'os', 'subprocess', 'zipfile', 'io', 're', 'threading'
     ],
     hookspath=[],
     runtime_hooks=[],
     excludes=[],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
     cipher=block_cipher
 )
 
@@ -38,5 +40,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='Github Projects '
+    name='Github projects installer'
 )
