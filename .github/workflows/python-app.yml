@@ -21,7 +21,7 @@ jobs:
     - name: Install pyinstaller
       run: pip install git+https://github.com/pyinstaller/pyinstaller.git@develop
     - name: Build Installer
-      run: pyinstaller Ready.spec
+      run: pyinstaller ready.spec
     - name: Publish Build Artifacts
       uses: actions/upload-artifact@master
       with:
