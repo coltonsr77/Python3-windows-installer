@@ -3,9 +3,10 @@ from tkinter import filedialog, messagebox
 import threading
 import os
 import subprocess
-from downloader import download_github_repo
+from downloader import download_github_repo, download_latest_release
 
-HELPER_REPO = "https://github.com/coltonsr77/installerready"
+HELPER_OWNER = "coltonsr77"
+HELPER_REPO = "installerready"
 
 class InstallerApp(ctk.CTk):
     def __init__(self):
@@ -58,41 +59,26 @@ class InstallerApp(ctk.CTk):
 
     def download_project_and_helper(self, repo, path):
         try:
-            self.update_progress(0.05, "Starting download...")
+            self.update_progress(0.05, "Starting project download...")
             result = download_github_repo(repo, path, self.update_progress)
 
-            if result["status"] == "ready":
-                self.update_progress(0.9, f"✅ {result['repo_name']} ready, downloading helper...")
-                helper_path = os.path.join(path, f"{result['repo_name']}_helper")
-                download_github_repo(HELPER_REPO, helper_path, self.update_progress)
-                self.find_and_run_installer(result["path"])
-            elif result["status"] == "no_installer":
-                self.update_progress(1.0, f"⚠️ No installerready.exe found, repo downloaded.")
-                helper_path = os.path.join(path, f"{result['repo_name']}_helper")
-                download_github_repo(HELPER_REPO, helper_path, self.update_progress)
+            if result["status"] in ("ready", "no_installer"):
+                self.update_progress(0.9, "⬇️ Downloading latest InstallerReady release...")
+                helper_file = download_latest_release(HELPER_OWNER, HELPER_REPO, path, self.update_progress)
+
+                if helper_file and os.path.exists(helper_file):
+                    self.update_progress(1.0, "🚀 Launching InstallerReady...")
+                    subprocess.Popen([helper_file], shell=True)
+                else:
+                    self.update_progress(1.0, "⚠️ Could not download InstallerReady release.")
             else:
-                self.update_progress(1.0, "❌ Failed to download project.")
+                self.update_progress(1.0, "❌ Project download failed.")
         except Exception as e:
             messagebox.showerror("Error", str(e))
             self.update_progress(1.0, "❌ Installation failed.")
 
-    def find_and_run_installer(self, base_path):
-        for root, dirs, files in os.walk(base_path):
-            for f in files:
-                if f.lower() == "installerready.exe":
-                    installer_path = os.path.join(root, f)
-                    answer = messagebox.askyesno(
-                        "Run Installer",
-                        f"Installer found:\n{installer_path}\n\nRun it now?"
-                    )
-                    if answer:
-                        subprocess.Popen([installer_path], shell=True)
-                        self.update_progress(1.0, "🚀 Installer launched.")
-                    return
-        self.update_progress(1.0, "⚠️ No installerready.exe found in project.")
-
     def show_about(self):
-        messagebox.showinfo("About", "GitHub Installer v0.3\nCreated by coltonsr77")
+        messagebox.showinfo("About", "GitHub Installer v0.3\nCreated by Colton Robertson")
 
 
 if __name__ == "__main__":
