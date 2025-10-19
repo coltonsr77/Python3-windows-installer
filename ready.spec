@@ -1,31 +1,18 @@
 # -*- mode: python ; coding: utf-8 -*-
-
 block_cipher = None
 
 a = Analysis(
-    ['ui.py'],          # main script
+    ['ui.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('downloader.py', '.')   # include downloader.py
-    ],
+    datas=[('downloader.py', '.')
     hiddenimports=[
-        'customtkinter',
-        'requests',
-        'tkinter',
-        'os',
-        'subprocess',
-        'zipfile',
-        'io',
-        're',
-        'threading',
+        'customtkinter', 'requests', 'tkinter', 'os', 'subprocess', 'zipfile', 'io', 're', 'threading'
     ],
     hookspath=[],
     runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
+    cipher=block_cipher
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
@@ -51,5 +38,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='installer'
+    name='Github Projects '
 )
