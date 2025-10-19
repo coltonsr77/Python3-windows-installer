@@ -3,13 +3,15 @@ from tkinter import filedialog, messagebox
 import threading
 import os
 import subprocess
+import webbrowser
 from downloader import download_github_repo
 
 class InstallerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("GitHub Project Installer")
-        self.geometry("500x400")
+        self.geometry("500x450")
+        self.resizable(False, False)
 
         self.repo_url = ctk.StringVar()
         self.install_path = ctk.StringVar()
@@ -17,16 +19,29 @@ class InstallerApp(ctk.CTk):
         self.create_widgets()
 
     def create_widgets(self):
+        # GitHub URL Entry
         ctk.CTkLabel(self, text="GitHub Repository URL:").pack(pady=10)
         ctk.CTkEntry(self, textvariable=self.repo_url, width=400).pack()
 
+        # Folder selection
         ctk.CTkButton(self, text="Choose Install Folder", command=self.choose_folder).pack(pady=10)
         ctk.CTkLabel(self, textvariable=self.install_path, text_color="gray").pack()
 
+        # Progress label
         self.progress_label = ctk.CTkLabel(self, text="")
         self.progress_label.pack(pady=10)
 
+        # Install button
         ctk.CTkButton(self, text="Install", command=self.start_install).pack(pady=10)
+
+        # New: InstallerReady Downloader button
+        ctk.CTkButton(
+            self,
+            text="InstallerReady Downloader",
+            command=self.open_installerready
+        ).pack(pady=5)
+
+        # About button
         ctk.CTkButton(self, text="About", command=self.show_about).pack(pady=10)
 
     def choose_folder(self):
@@ -98,6 +113,11 @@ class InstallerApp(ctk.CTk):
                 messagebox.showerror("Error", f"Failed to launch installer:\n{e}")
         else:
             self.progress_label.configure(text="Installer ready, but not launched.")
+
+    def open_installerready(self):
+        """Open the InstallerReady GitHub page in the default browser."""
+        url = "https://github.com/coltonsr77/installerready"
+        webbrowser.open(url)
 
     def show_about(self):
         messagebox.showinfo("About", "GitHub Installer v0.1\nCreated by coltonsr77")
