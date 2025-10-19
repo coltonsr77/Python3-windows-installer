@@ -28,11 +28,51 @@ def get_default_branch(repo_url: str) -> str:
     except Exception:
         return "main"
 
+def download_latest_release(owner: str, repo: str, save_path: str, progress_callback=None):
+    """Downloads the latest release asset for a given GitHub repo."""
+    try:
+        if progress_callback:
+            progress_callback(0.05, f"Checking latest {repo} release...")
+
+        api_url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
+        response = requests.get(api_url, timeout=10)
+        response.raise_for_status()
+        release = response.json()
+
+        if not release.get("assets"):
+            raise Exception("No release assets found.")
+
+        asset = release["assets"][0]
+        download_url = asset["browser_download_url"]
+        asset_name = asset["name"]
+        local_file = os.path.join(save_path, asset_name)
+
+        if progress_callback:
+            progress_callback(0.1, f"Downloading {asset_name}...")
+
+        with requests.get(download_url, stream=True) as r:
+            r.raise_for_status()
+            total = int(r.headers.get('content-length', 0))
+            downloaded = 0
+            with open(local_file, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if total > 0 and progress_callback:
+                            progress_callback(min(1.0, downloaded / total), f"Downloading {asset_name}...")
+
+        if progress_callback:
+            progress_callback(1.0, f"{repo} release downloaded successfully.")
+        return local_file
+
+    except Exception as e:
+        if progress_callback:
+            progress_callback(1.0, f"Failed to download release: {e}")
+        return None
+
 def download_github_repo(repo_url: str, save_path: str, progress_callback=None):
-    """
-    Downloads a GitHub repo as a ZIP and extracts it.
-    Reports progress via progress_callback(percent, message).
-    """
+    """(Unchanged) Downloads the specified repo’s main/master branch ZIP."""
     try:
         repo_name = get_repo_name(repo_url)
         branch = get_default_branch(repo_url)
