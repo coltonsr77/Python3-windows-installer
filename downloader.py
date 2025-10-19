@@ -2,57 +2,74 @@ import requests
 import zipfile
 import io
 import os
+import re
 
-def download_github_repo(repo_url, dest_folder):
+def get_repo_name(repo_url: str) -> str:
+    """Extract the repository name from the GitHub URL."""
+    match = re.search(r"github\.com/[^/]+/([^/]+)", repo_url)
+    if match:
+        return match.group(1).replace(".git", "")
+    return "downloaded_repo"
+
+def download_github_repo(repo_url: str, save_path: str, progress_callback=None):
     """
-    Downloads a GitHub repo ZIP and extracts it.
-    Detects default branch dynamically.
-    Checks for 'installerready.exe' or 'installerready.bat' after download.
+    Downloads a GitHub repo as a ZIP and extracts it.
+    Reports progress via progress_callback(percent, message).
     """
+    try:
+        repo_name = get_repo_name(repo_url)
+        zip_url = f"{repo_url}/archive/refs/heads/main.zip"
 
-    repo_url = repo_url.strip().rstrip("/")
+        if progress_callback:
+            progress_callback(0.05, f"Connecting to {repo_name}...")
 
-    if "github.com" not in repo_url:
-        raise Exception("Invalid GitHub URL. Example: https://github.com/username/repo")
+        response = requests.get(zip_url, stream=True)
+        response.raise_for_status()
 
-    parts = repo_url.split("github.com/")[-1].split("/")
-    if len(parts) < 2:
-        raise Exception("Invalid GitHub repo URL. It should look like https://github.com/user/repo")
+        total = int(response.headers.get('content-length', 0))
+        downloaded = 0
+        buffer = io.BytesIO()
 
-    owner, repo = parts[0], parts[1]
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:
+                buffer.write(chunk)
+                downloaded += len(chunk)
+                if total > 0 and progress_callback:
+                    progress_callback(downloaded / total * 0.8, f"Downloading {repo_name}...")
 
-    # --- Get the default branch dynamically ---
-    api_url = f"https://api.github.com/repos/{owner}/{repo}"
-    response = requests.get(api_url)
-    if response.status_code != 200:
-        raise Exception(f"Failed to access GitHub API ({response.status_code}).")
-    data = response.json()
-    default_branch = data.get("default_branch", "main")
+        if progress_callback:
+            progress_callback(0.85, f"Extracting {repo_name}...")
 
-    # --- Download the ZIP ---
-    zip_url = f"https://github.com/{owner}/{repo}/archive/refs/heads/{default_branch}.zip"
-    response = requests.get(zip_url)
-    if response.status_code != 200:
-        raise Exception(f"Failed to download ZIP from {zip_url}")
+        buffer.seek(0)
+        with zipfile.ZipFile(buffer) as zip_ref:
+            zip_ref.extractall(save_path)
 
-    # --- Extract ZIP contents ---
-    zip_data = zipfile.ZipFile(io.BytesIO(response.content))
-    extract_path = os.path.join(dest_folder, repo)
-    os.makedirs(extract_path, exist_ok=True)
-    zip_data.extractall(extract_path)
-    zip_data.close()
-
-    # --- Check for installerready.exe or installerready.bat ---
-    found_installer = False
-    for root, dirs, files in os.walk(extract_path):
-        for f in files:
-            if f.lower() in ["installerready.exe", "installerready.bat"]:
-                found_installer = True
+        extracted_folder = None
+        for item in os.listdir(save_path):
+            if os.path.isdir(os.path.join(save_path, item)) and repo_name.lower() in item.lower():
+                extracted_folder = os.path.join(save_path, item)
                 break
 
-    if found_installer:
-        print(f"✅ Installer file found in {repo} — ready to install.")
-        return {"status": "ready", "path": extract_path}
-    else:
-        print(f"⚠️ No installer found in {repo}. Repo downloaded only.")
-        return {"status": "no_installer", "path": extract_path}
+        if not extracted_folder:
+            extracted_folder = save_path
+
+        if progress_callback:
+            progress_callback(1.0, f"{repo_name} downloaded successfully.")
+
+        # Check for installerready.exe
+        exe_found = False
+        for root, _, files in os.walk(extracted_folder):
+            if "installerready.exe" in [f.lower() for f in files]:
+                exe_found = True
+                break
+
+        return {
+            "status": "ready" if exe_found else "no_installer",
+            "path": extracted_folder,
+            "repo_name": repo_name
+        }
+
+    except Exception as e:
+        if progress_callback:
+            progress_callback(1.0, f"Failed to download {repo_url}: {e}")
+        return {"status": "error", "error": str(e)}
