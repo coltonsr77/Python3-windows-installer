@@ -78,7 +78,7 @@ class InstallerApp(ctk.CTk):
             self.update_progress(1.0, "❌ Installation failed.")
 
     def show_about(self):
-        messagebox.showinfo("About", "GitHub Installer v0.3\nCreated by Colton Robertson")
+        messagebox.showinfo("About", "GitHub Installer v0.3\nCreated by coltonsr77")
 
 
 if __name__ == "__main__":
