@@ -1,21 +1,25 @@
-# github_installer.spec
-# Build with: pyinstaller github_installer.spec
+# -*- mode: python ; coding: utf-8 -*-
 
-# ---- IMPORTS ----
-from PyInstaller.utils.hooks import collect_submodules
-from PyInstaller.utils.hooks import collect_data_files
-from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT
-
-# ---- SETTINGS ----
 block_cipher = None
-hiddenimports = collect_submodules('customtkinter')
 
 a = Analysis(
-    ['main.py'],
+    ['ui.py'],          # main script
     pathex=[],
     binaries=[],
-    datas=collect_data_files('customtkinter'),
-    hiddenimports=hiddenimports,
+    datas=[
+        ('downloader.py', '.')   # include downloader.py
+    ],
+    hiddenimports=[
+        'customtkinter',
+        'requests',
+        'tkinter',
+        'os',
+        'subprocess',
+        'zipfile',
+        'io',
+        're',
+        'threading',
+    ],
     hookspath=[],
     runtime_hooks=[],
     excludes=[],
@@ -31,12 +35,12 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='GitHubInstaller',
+    name='installer',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,  # Set to True if you want a console window for debugging
+    console=False,
 )
 
 coll = COLLECT(
@@ -46,5 +50,6 @@ coll = COLLECT(
     a.datas,
     strip=False,
     upx=True,
-    name='GitHubInstaller'
+    upx_exclude=[],
+    name='installer'
 )
