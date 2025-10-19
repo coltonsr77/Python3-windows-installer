@@ -11,6 +11,23 @@ def get_repo_name(repo_url: str) -> str:
         return match.group(1).replace(".git", "")
     return "downloaded_repo"
 
+def get_default_branch(repo_url: str) -> str:
+    """Detect the default branch (main/master/etc) via GitHub API."""
+    try:
+        match = re.search(r"github\.com/([^/]+)/([^/]+)", repo_url)
+        if not match:
+            return "main"
+
+        owner, repo = match.groups()
+        api_url = f"https://api.github.com/repos/{owner}/{repo}"
+        response = requests.get(api_url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get("default_branch", "main")
+        return "main"
+    except Exception:
+        return "main"
+
 def download_github_repo(repo_url: str, save_path: str, progress_callback=None):
     """
     Downloads a GitHub repo as a ZIP and extracts it.
@@ -18,10 +35,11 @@ def download_github_repo(repo_url: str, save_path: str, progress_callback=None):
     """
     try:
         repo_name = get_repo_name(repo_url)
-        zip_url = f"{repo_url}/archive/refs/heads/main.zip"
+        branch = get_default_branch(repo_url)
+        zip_url = f"https://github.com/{repo_url.split('github.com/')[-1]}/archive/refs/heads/{branch}.zip"
 
         if progress_callback:
-            progress_callback(0.05, f"Connecting to {repo_name}...")
+            progress_callback(0.05, f"Connecting to {repo_name} ({branch})...")
 
         response = requests.get(zip_url, stream=True)
         response.raise_for_status()
@@ -35,7 +53,7 @@ def download_github_repo(repo_url: str, save_path: str, progress_callback=None):
                 buffer.write(chunk)
                 downloaded += len(chunk)
                 if total > 0 and progress_callback:
-                    progress_callback(downloaded / total * 0.8, f"Downloading {repo_name}...")
+                    progress_callback(min(0.8, downloaded / total * 0.8), f"Downloading {repo_name}...")
 
         if progress_callback:
             progress_callback(0.85, f"Extracting {repo_name}...")
