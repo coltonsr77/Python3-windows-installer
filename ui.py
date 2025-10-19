@@ -3,6 +3,11 @@ from tkinter import filedialog, messagebox
 import threading
 import os
 import subprocess
+import sys
+
+# Ensure current folder is first in path
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
 from downloader import download_github_repo, download_latest_release
 
 HELPER_REPO_URL = "https://github.com/coltonsr77/installerready"
@@ -11,7 +16,7 @@ HELPER_REPO_URL = "https://github.com/coltonsr77/installerready"
 class InstallerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("Project Installer")
+        self.title("GitHub Project Installer")
         self.geometry("600x400")
         self.resizable(False, False)
 
@@ -22,27 +27,16 @@ class InstallerApp(ctk.CTk):
 
     def create_widgets(self):
         ctk.CTkLabel(self, text="GitHub Project Installer", font=("Arial", 20, "bold")).pack(pady=10)
-
-        # Input field for GitHub repo
         ctk.CTkEntry(self, textvariable=self.repo_url, placeholder_text="Enter GitHub repository URL...").pack(padx=20, pady=10, fill="x")
-
-        # Output folder button
         ctk.CTkButton(self, text="Select Install Folder", command=self.select_output_folder).pack(pady=5)
         self.folder_label = ctk.CTkLabel(self, text=f"Install Path: {self.output_dir}")
         self.folder_label.pack()
-
-        # Progress
         self.progress = ctk.CTkProgressBar(self, width=400)
         self.progress.set(0)
         self.progress.pack(pady=20)
-
         self.progress_label = ctk.CTkLabel(self, text="Ready.")
         self.progress_label.pack()
-
-        # Install button
         ctk.CTkButton(self, text="Install Project", command=self.start_install).pack(pady=10)
-
-        # About button
         ctk.CTkButton(self, text="About", command=self.show_about).pack(pady=5)
 
     def select_output_folder(self):
@@ -56,7 +50,6 @@ class InstallerApp(ctk.CTk):
         if not repo_url:
             messagebox.showwarning("Missing URL", "Please enter a GitHub repository URL.")
             return
-
         threading.Thread(target=self.run_install, args=(repo_url,), daemon=True).start()
 
     def run_install(self, repo_url):
@@ -104,7 +97,7 @@ class InstallerApp(ctk.CTk):
     def show_about(self):
         messagebox.showinfo(
             "About",
-            "GitHub Installer v0.3\nCreated by coltonsr77\n\n"
+            "GitHub Installer v0.3\nCreated by Coltonsr77\n\n"
             "This installer downloads a GitHub project and, if needed, automatically "
             "downloads and runs the latest release of InstallerReady."
         )
