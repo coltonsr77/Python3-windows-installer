@@ -5,7 +5,7 @@ a = Analysis(
     ['ui.py'],
     pathex=[],
     binaries=[],
-    datas=[('downloader.py', '.')
+    datas=[('downloader.py', '.')]
     hiddenimports=[
         'customtkinter', 'requests', 'tkinter', 'os', 'subprocess', 'zipfile', 'io', 're', 'threading'
     ],
