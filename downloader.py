@@ -6,13 +6,12 @@ import os
 def download_github_repo(repo_url, dest_folder):
     """
     Downloads a GitHub repo ZIP and extracts it.
-    Works with any default branch (main/master/custom).
+    Detects default branch dynamically.
+    Checks for 'installerready.exe' or 'installerready.bat' after download.
     """
 
-    # Normalize the URL
     repo_url = repo_url.strip().rstrip("/")
 
-    # Extract owner/repo name
     if "github.com" not in repo_url:
         raise Exception("Invalid GitHub URL. Example: https://github.com/username/repo")
 
@@ -22,30 +21,38 @@ def download_github_repo(repo_url, dest_folder):
 
     owner, repo = parts[0], parts[1]
 
-    # Get default branch from GitHub API
+    # --- Get the default branch dynamically ---
     api_url = f"https://api.github.com/repos/{owner}/{repo}"
     response = requests.get(api_url)
     if response.status_code != 200:
-        raise Exception(f"Failed to access repository API. ({response.status_code})")
-
+        raise Exception(f"Failed to access GitHub API ({response.status_code}).")
     data = response.json()
     default_branch = data.get("default_branch", "main")
 
-    # Build the ZIP URL using the correct branch
+    # --- Download the ZIP ---
     zip_url = f"https://github.com/{owner}/{repo}/archive/refs/heads/{default_branch}.zip"
-
-    print(f"Downloading ZIP from: {zip_url}")
-
     response = requests.get(zip_url)
     if response.status_code != 200:
         raise Exception(f"Failed to download ZIP from {zip_url}")
 
+    # --- Extract ZIP contents ---
     zip_data = zipfile.ZipFile(io.BytesIO(response.content))
-
     extract_path = os.path.join(dest_folder, repo)
     os.makedirs(extract_path, exist_ok=True)
-
     zip_data.extractall(extract_path)
     zip_data.close()
 
-    return extract_path
+    # --- Check for installerready.exe or installerready.bat ---
+    found_installer = False
+    for root, dirs, files in os.walk(extract_path):
+        for f in files:
+            if f.lower() in ["installerready.exe", "installerready.bat"]:
+                found_installer = True
+                break
+
+    if found_installer:
+        print(f"✅ Installer file found in {repo} — ready to install.")
+        return {"status": "ready", "path": extract_path}
+    else:
+        print(f"⚠️ No installer found in {repo}. Repo downloaded only.")
+        return {"status": "no_installer", "path": extract_path}
