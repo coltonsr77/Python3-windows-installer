@@ -6,11 +6,13 @@ import subprocess
 import webbrowser
 from downloader import download_github_repo
 
+INSTALLERREADY_REPO = "https://github.com/coltonsr77/installerready"
+
 class InstallerApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("GitHub Project Installer")
-        self.geometry("500x450")
+        self.geometry("500x470")
         self.resizable(False, False)
 
         self.repo_url = ctk.StringVar()
@@ -19,29 +21,23 @@ class InstallerApp(ctk.CTk):
         self.create_widgets()
 
     def create_widgets(self):
-        # GitHub URL Entry
         ctk.CTkLabel(self, text="GitHub Repository URL:").pack(pady=10)
         ctk.CTkEntry(self, textvariable=self.repo_url, width=400).pack()
 
-        # Folder selection
         ctk.CTkButton(self, text="Choose Install Folder", command=self.choose_folder).pack(pady=10)
         ctk.CTkLabel(self, textvariable=self.install_path, text_color="gray").pack()
 
-        # Progress label
         self.progress_label = ctk.CTkLabel(self, text="")
         self.progress_label.pack(pady=10)
 
-        # Install button
         ctk.CTkButton(self, text="Install", command=self.start_install).pack(pady=10)
 
-        # New: InstallerReady Downloader button
         ctk.CTkButton(
             self,
             text="InstallerReady Downloader",
             command=self.open_installerready
         ).pack(pady=5)
 
-        # About button
         ctk.CTkButton(self, text="About", command=self.show_about).pack(pady=10)
 
     def choose_folder(self):
@@ -66,37 +62,54 @@ class InstallerApp(ctk.CTk):
             result = download_github_repo(repo, path)
 
             if result["status"] == "ready":
-                self.progress_label.configure(text="✅ Installer file found! Preparing to run...")
-                install_path = result["path"]
+                self.progress_label.configure(text="✅ Project downloaded successfully!")
 
-                # Look for installerready.exe or .bat
-                installer_file = None
-                for root, dirs, files in os.walk(install_path):
-                    for f in files:
-                        if f.lower() in ["installerready.exe", "installerready.bat"]:
-                            installer_file = os.path.join(root, f)
-                            break
-                    if installer_file:
-                        break
+                # --- STEP 2: Download InstallerReady automatically ---
+                self.progress_label.configure(text="⬇️ Downloading InstallerReady helper...")
+                ir_path = os.path.join(path, "InstallerReady")
+                ir_result = download_github_repo(INSTALLERREADY_REPO, ir_path)
 
-                if installer_file:
-                    self.ask_run_installer(installer_file)
+                if ir_result["status"] == "ready":
+                    self.progress_label.configure(text="✅ InstallerReady downloaded successfully!")
                 else:
-                    self.progress_label.configure(
-                        text="⚠️ Installer not found (unexpected). Repo downloaded."
-                    )
+                    self.progress_label.configure(text="⚠️ InstallerReady repo downloaded (no installer detected).")
+
+                # --- Look for installerready.exe or .bat in main repo ---
+                self.find_and_run_installer(result["path"])
 
             else:
                 self.progress_label.configure(
                     text="⚠️ Oops! We can’t install this project, but we downloaded the repo."
                 )
 
+                # Even if project failed, still try to get InstallerReady
+                self.progress_label.configure(text="⬇️ Downloading InstallerReady fallback...")
+                ir_path = os.path.join(path, "InstallerReady")
+                download_github_repo(INSTALLERREADY_REPO, ir_path)
+
         except Exception as e:
             self.progress_label.configure(text="❌ Installation failed.")
             messagebox.showerror("Error", str(e))
 
+    def find_and_run_installer(self, base_path):
+        """Look for installerready.exe or .bat and optionally run it."""
+        installer_file = None
+        for root, dirs, files in os.walk(base_path):
+            for f in files:
+                if f.lower() in ["installerready.exe", "installerready.bat"]:
+                    installer_file = os.path.join(root, f)
+                    break
+            if installer_file:
+                break
+
+        if installer_file:
+            self.ask_run_installer(installer_file)
+        else:
+            self.progress_label.configure(
+                text="⚠️ Installer not found, but repository downloaded."
+            )
+
     def ask_run_installer(self, installer_path):
-        """Ask user to run the installerready file."""
         answer = messagebox.askyesno(
             "Run Installer",
             f"Installer file found:\n\n{installer_path}\n\nDo you want to run it now?"
@@ -116,8 +129,12 @@ class InstallerApp(ctk.CTk):
 
     def open_installerready(self):
         """Open the InstallerReady GitHub page in the default browser."""
-        url = "https://github.com/coltonsr77/installerready"
-        webbrowser.open(url)
+        webbrowser.open(INSTALLERREADY_REPO)
 
     def show_about(self):
-        messagebox.showinfo("About", "GitHub Installer v0.1\nCreated by coltonsr77")
+        messagebox.showinfo("About", "GitHub Installer v0.3\nCreated by coltonsr77")
+
+
+if __name__ == "__main__":
+    app = InstallerApp()
+    app.mainloop()
