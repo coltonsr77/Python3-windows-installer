@@ -53,4 +53,4 @@ class InstallerApp(ctk.CTk):
             messagebox.showerror("Error", str(e))
 
     def show_about(self):
-        messagebox.showinfo("About", "GitHub Installer v1.0\nCreated by YourName")
+        messagebox.showinfo("About", "GitHub Installer v1.0\nCreated by coltonsr77")
