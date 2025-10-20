@@ -4,4 +4,4 @@ This app is like https://github.com/coltonsr77/projects-downloader-P3WS but it w
 
 If you want to add "InstallerReady" to your repo get it at:https://github.com/coltonsr77/installerready
 
-This app now downloads InstallerReady after Downloading your repo.
+This app now downloads InstallerReady after Downloading your repo. 0.3 OR HIGHER
