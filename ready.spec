@@ -3,7 +3,7 @@
 block_cipher = None
 
 a = Analysis(
-    ['GitHubInstaller.py'],
+    ['downloader.py'],
     pathex=[],
     binaries=[],
     datas=[],
