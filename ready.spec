@@ -1,20 +1,30 @@
 # -*- mode: python ; coding: utf-8 -*-
+
 block_cipher = None
 
 a = Analysis(
-    ['ui.py'],          # main script
+    ['GitHubInstaller.py'],
     pathex=[],
     binaries=[],
-    datas=[('downloader.py', '.')],
+    datas=[],
     hiddenimports=[
-        'customtkinter', 'requests', 'tkinter', 'os', 'subprocess', 'zipfile', 'io', 're', 'threading'
+        'customtkinter',
+        'tkinter',
+        'requests',
+        'os',
+        'zipfile',
+        'io',
+        're',
+        'subprocess',
+        'threading',
+        'sys',
     ],
     hookspath=[],
     runtime_hooks=[],
-    excludes=[],
+    excludes=['_internal'],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
-    cipher=block_cipher
+    cipher=block_cipher,
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
@@ -24,7 +34,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='installer',
+    name='GitHubInstaller',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -40,5 +50,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='Github projects installer'
+    name='GitHubInstaller'
 )
