@@ -13,7 +13,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 HELPER_REPO_URL = "https://github.com/coltonsr77/installerready"
-VERSION = "0.3"  # Installer version
+VERSION = "0.4"  # Installer version
 
 class GitHubInstallerApp(ctk.CTk):
     def __init__(self):
