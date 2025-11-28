@@ -1,4 +1,4 @@
 customtkinter
 requests
 tqdm
-kitecmd-IR
+InstallerReady
