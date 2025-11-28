@@ -1,4 +1,3 @@
 customtkinter
 requests
 tqdm
-InstallerReady
