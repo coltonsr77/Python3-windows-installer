@@ -1,6 +1,6 @@
 # Python3-windows-installer
 
-This app is like https://github.com/coltonsr77/projects-downloader-P3WS but it will look for a file called "installerready.exe" and it will run it
+This app is like https://github.com/coltonsr77/projects-downloader-P3WS
 
 If you want to add "InstallerReady" to your repo get it at:https://github.com/coltonsr77/installerready
 
