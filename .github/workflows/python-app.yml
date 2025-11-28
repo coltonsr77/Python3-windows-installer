@@ -13,16 +13,16 @@ jobs:
 
     steps:
     - name: Obtain latest version of the repository
-      uses: actions/checkout@v1
+      uses: actions/checkout@v6
     - name: Set up Python 3
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: '3.13.x'
     - name: Install requirements with PIP
       run: pip install -r requirements.txt
     - name: Install pyinstaller
       run: pip install git+https://github.com/pyinstaller/pyinstaller.git@develop
-    - name: Build Installer
+    - name: Build GitHubInstaller
       run: pyinstaller ready.spec
     - name: Publish Build Artifacts
       uses: actions/upload-artifact@master
