@@ -169,7 +169,7 @@ class GitHubInstallerApp(ctk.CTk):
     def show_about(self):
         messagebox.showinfo(
             "About GitHub Installer",
-            f"GitHub Installer v{VERSION}\nCreated by Coltonsr77\n\n"
+            f"GitHub Installer v{VERSION}\nCreated by coltonsr77\n\n"
             "Downloads GitHub projects and automatically runs InstallerReady if needed."
         )
 
