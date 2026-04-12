@@ -32,7 +32,7 @@ def download_github_repo(repo_url: str, save_path: str, progress_callback=None):
         with zipfile.ZipFile(buffer) as zip_ref:
             zip_ref.extractall(save_path)
         exe_found = any(
-            "InstallerReady0.4.1.exe" in f.lower()
+            "InstallerReady0.4.3.exe" in f.lower()
             for root, _, files in os.walk(save_path)
             for f in files
         )
