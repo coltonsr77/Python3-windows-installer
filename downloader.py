@@ -77,7 +77,7 @@ def download_latest_release(repo_url: str, save_path: str, progress_callback=Non
         exe_path = None
         for root, _, files in os.walk(save_path):
             for file in files:
-                if file.lower() == "InstallerReady0.4.1.exe":
+                if file.lower() == "InstallerReady0.4.3.exe":
                     exe_path = os.path.join(root, file)
                     break
             if exe_path:
